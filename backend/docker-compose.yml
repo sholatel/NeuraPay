@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: wallet-ledger-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: wallet-ledger-app-dev
+    profiles:
+      - dev
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      CHOKIDAR_INTERVAL: '1000'
+      WATCHPACK_POLLING: 'true'
+      TSC_WATCHFILE: UsePolling
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm run migration:run && npm run watch"
+
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wallet-ledger-app-prod
+    profiles:
+      - prod
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      TYPEORM_ENTITIES_PATH: dist/**/*.entity.js
+      TYPEORM_MIGRATIONS_PATH: dist/db/migrations/*.js
+    ports:
+      - '3001:3000'
+    command: npm run start:prod-with-migrations
+
+volumes:
+  postgres_data:
