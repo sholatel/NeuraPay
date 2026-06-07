@@ -10,6 +10,7 @@ import {
 import { buildReference, formatDate, formatMoney } from '../lib/format'
 import { useAuth } from '../providers/auth-context'
 import type { TransactionRecord, WalletSummary } from '../types/api'
+import { VoicePanel } from '../components/voice/voice-panel'
 
 const HISTORY_PAGE_SIZE = 10
 
@@ -267,6 +268,30 @@ export function DashboardPage() {
           </article>
         </section>
 
+        {/* ── Voice command ─────────────────────────────────────────── */}
+        <section className="grid gap-6 sm:grid-cols-[1fr_1.4fr]">
+          <VoicePanel />
+
+          <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_20px_70px_-36px_rgba(15,23,42,0.35)] backdrop-blur flex flex-col justify-center gap-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-teal-700">How it works</p>
+            <h3 className="text-lg font-semibold text-slate-950">AI-powered voice banking</h3>
+            <ol className="space-y-2 text-sm leading-6 text-slate-600 list-none">
+              {[
+                ['🎤', 'Tap the mic and say your command naturally'],
+                ['✦', 'Whisper transcribes your voice to text'],
+                ['⚡', 'The Banking Agent routes your intent to a specialist'],
+                ['✓', 'The specialist calls the banking backend securely'],
+              ].map(([icon, text]) => (
+                <li key={text} className="flex items-start gap-3">
+                  <span className="mt-0.5 text-base leading-none">{icon}</span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ol>
+          </article>
+        </section>
+
+        {/* ── Forms + history ───────────────────────────────────────── */}
         <section className="grid gap-6 xl:grid-cols-[0.9fr_0.9fr_1.2fr]">
           <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_20px_70px_-36px_rgba(15,23,42,0.35)] backdrop-blur">
             <h2 className="text-xl font-semibold text-slate-950">Deposit funds</h2>

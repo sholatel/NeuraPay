@@ -1,0 +1,56 @@
+[project]
+name = "ai-orchestration-service"
+version = "0.1.0"
+description = "AI Orchestration Layer for the fintech platform"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "openai>=1.58.0",
+    "openai-agents>=0.0.12",
+    "litellm>=1.40.0",
+    "pyjwt>=2.9.0",
+    "python-multipart>=0.0.20",
+    "structlog>=24.4.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.28.0",
+    "faster-whisper>=1.2.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-mock>=3.14.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+    "E501",
+    "B008",  # FastAPI's File(...) / Depends() in function signatures is intentional
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
