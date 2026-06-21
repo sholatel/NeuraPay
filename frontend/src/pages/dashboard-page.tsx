@@ -28,7 +28,7 @@ export function DashboardPage() {
   const [notice, setNotice] = useState('')
   const [depositAmount, setDepositAmount] = useState('')
   const [transferAmount, setTransferAmount] = useState('')
-  const [recipientUserId, setRecipientUserId] = useState('')
+  const [recipientAccountNumber, setRecipientAccountNumber] = useState('')
   const [depositing, setDepositing] = useState(false)
   const [transferring, setTransferring] = useState(false)
   const hasLoadedWallets = useRef(false)
@@ -138,7 +138,7 @@ export function DashboardPage() {
 
     try {
       await transferFunds(token, {
-        toUserId: recipientUserId,
+        toAccountNumber: recipientAccountNumber,
         amount: Number(transferAmount),
         currency: selectedCurrency,
         reference: buildReference('TRF'),
@@ -146,7 +146,7 @@ export function DashboardPage() {
 
       setNotice('Transfer completed successfully.')
       setTransferAmount('')
-      setRecipientUserId('')
+      setRecipientAccountNumber('')
       setHistoryPage(1)
       await loadDashboard(1, selectedCurrency)
     } catch (err) {
@@ -245,9 +245,11 @@ export function DashboardPage() {
 
           <article className="rounded-[28px] border border-white/70 bg-white/80 p-6 shadow-[0_20px_70px_-36px_rgba(15,23,42,0.35)] backdrop-blur">
             <p className="text-sm font-medium text-slate-500">Account number</p>
-            <p className="mt-3 break-all text-xl font-semibold text-slate-950">{session.user.id}</p>
+            <p className="mt-3 text-xl font-semibold tracking-widest text-slate-950">
+              {session.user.accountNumber ?? '—'}
+            </p>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              This demo uses the user ID as the account number.
+              Your 10-digit NUBAN account number. Share this to receive transfers.
             </p>
           </article>
 
@@ -332,14 +334,16 @@ export function DashboardPage() {
 
             <form className="mt-6 space-y-4" onSubmit={handleTransfer}>
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">Recipient user ID</span>
+                <span className="mb-2 block text-sm font-medium text-slate-700">Recipient account number</span>
                 <input
                   type="text"
                   required
-                  value={recipientUserId}
-                  onChange={(event) => setRecipientUserId(event.target.value)}
+                  maxLength={10}
+                  pattern="\d{10}"
+                  value={recipientAccountNumber}
+                  onChange={(event) => setRecipientAccountNumber(event.target.value.replace(/\D/g, ''))}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-teal-500 focus:bg-white"
-                  placeholder="UUID of the recipient user"
+                  placeholder="10-digit account number"
                 />
               </label>
 

@@ -19,20 +19,6 @@ logger = get_logger(__name__)
 # NestJS global API prefix (set in main.ts)
 _API_PREFIX = "/api"
 
-# Conversion factor: the NestJS backend stores and accepts amounts in kobo.
-# 1 NGN = 100 kobo. Users speak in NGN; we convert before sending to the API.
-_KOBO_PER_NGN = 100
-
-
-def ngn_to_kobo(amount_ngn: float) -> int:
-    """Convert user-facing Naira amount to kobo integer for the banking API."""
-    return int(round(amount_ngn * _KOBO_PER_NGN))
-
-
-def kobo_to_ngn(amount_kobo: int) -> float:
-    """Convert kobo integer from the banking API to user-facing Naira."""
-    return amount_kobo / _KOBO_PER_NGN
-
 
 class BankingClient:
     """
@@ -53,6 +39,26 @@ class BankingClient:
         self._headers: dict[str, str] = {"Content-Type": "application/json"}
         if bearer_token:
             self._headers["Authorization"] = f"Bearer {bearer_token}"
+
+    # ── Auth endpoints ────────────────────────────────────────────────────────
+
+    async def verify_token(self) -> dict:
+        """
+        GET /api/auth/me — validate the current bearer token.
+
+        Returns { valid: true, user: { id, name, email, accountNumber, status } }.
+        Raises BankingBackendError (401) if the token is missing, expired, or invalid.
+        """
+        return await self._get("/auth/me")
+
+    async def lookup_account(self, account_number: str) -> dict:
+        """
+        GET /api/users/account/:accountNumber — look up a recipient by account number.
+
+        Returns { name, accountNumber, bank, email }.
+        Raises BankingBackendError (404) if the account number is not found.
+        """
+        return await self._get(f"/users/account/{account_number}")
 
     # ── Wallet endpoints ──────────────────────────────────────────────────────
 
@@ -85,7 +91,7 @@ class BankingClient:
 
     async def transfer(
         self,
-        to_user_id: str,
+        to_account_number: str,
         amount_ngn: float,
         reference: str,
         currency: str = "NGN",
@@ -93,14 +99,13 @@ class BankingClient:
         """
         POST /api/wallet/transfer
 
-        Amounts are converted from NGN to kobo before sending to the backend.
         The `reference` must be unique (8–100 chars) — callers must generate it.
         """
         return await self._post(
             "/wallet/transfer",
             {
-                "toUserId": to_user_id,
-                "amount": ngn_to_kobo(amount_ngn),
+                "toAccountNumber": to_account_number,
+                "amount": amount_ngn,
                 "currency": currency.upper(),
                 "reference": reference,
             },
@@ -120,7 +125,7 @@ class BankingClient:
         return await self._post(
             "/wallet/deposit",
             {
-                "amount": ngn_to_kobo(amount_ngn),
+                "amount": amount_ngn,
                 "currency": currency.upper(),
                 "reference": reference,
             },

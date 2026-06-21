@@ -1,9 +1,11 @@
 import { Transform } from 'class-transformer';
-import { IsInt, IsString, IsUUID, Length, Min } from 'class-validator';
+import { IsInt, IsString, Length, Matches, Min } from 'class-validator';
 
 export class TransferDto {
-  @IsUUID()
-  toUserId: string;
+  @IsString()
+  @Length(10, 10, { message: 'Account number must be exactly 10 digits' })
+  @Matches(/^\d{10}$/, { message: 'Account number must contain only digits' })
+  toAccountNumber: string;
 
   @IsInt()
   @Min(1)

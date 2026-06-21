@@ -2,15 +2,16 @@
 Balance tools — callable by the Balance_Agent.
 
 These tools call the NestJS banking backend to fetch wallet balance information
-for the authenticated user. All amounts returned from the API are in kobo;
-we convert to NGN before returning the result string.
+for the authenticated user. Amounts are returned in NGN.
 """
 
 from agents import RunContextWrapper, function_tool
 
 from app.agents.base import RequestContext
 from app.core.exceptions import BankingBackendError
-from app.integrations.banking.client import kobo_to_ngn
+#from app.core.logging import get_logger
+
+#logger = get_logger(__name__)
 
 
 @function_tool
@@ -32,7 +33,8 @@ async def get_wallet_balance(
             user_id=ctx.context.user_id,
             currency=currency,
         )
-        balance_ngn = kobo_to_ngn(data.get("balance", 0))
+        balance_ngn = float(data.get("balance", 0))
+        #logger.info("balance_tool.fetched", balance_ngn=balance_ngn, currency=currency)
         return (
             f"Balance retrieved.\n"
             f"Currency: {currency.upper()}\n"
@@ -61,7 +63,7 @@ async def get_all_wallets(ctx: RunContextWrapper[RequestContext]) -> str:
         lines = ["Your wallets:"]
         for w in wallets:
             currency = w.get("currency", "?")
-            balance_ngn = kobo_to_ngn(w.get("balance", 0))
+            balance_ngn = float(w.get("balance", 0))
             lines.append(f"  {currency}: ₦{balance_ngn:,.2f}")
 
         return "\n".join(lines)

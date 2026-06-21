@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash } from 'bcrypt';
 import { DataSource, Repository } from 'typeorm';
+import { generateAccountNumber } from '../../common/utils/account-number.util';
 import { Wallet } from '../wallet/wallet.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User, UserStatus } from './user.entity';
@@ -30,11 +31,20 @@ export class UserService {
 
         const savedUser = await manager.save(User, user);
 
+        // Count all users (including the one just saved) to derive a unique sequence.
+        // Safe inside the transaction — concurrent creates each see their own count.
+        const row = await manager
+          .createQueryBuilder(User, 'u')
+          .select('COUNT(*)', 'count')
+          .getRawOne<{ count: string }>();
+
+        savedUser.accountNumber = generateAccountNumber(Number(row?.count ?? 1));
+        await manager.save(User, savedUser);
+
         const wallet = manager.create(Wallet, {
           userId: savedUser.id,
           currency: DEFAULT_CURRENCY,
         });
-
         const savedWallet = await manager.save(Wallet, wallet);
 
         savedUser.status = UserStatus.OPENED;
@@ -49,21 +59,30 @@ export class UserService {
       if ((error as { code?: string }).code === '23505') {
         throw new ConflictException('User email already exists');
       }
-
       throw error;
     }
   }
 
   async findByIdOrThrow(id: string) {
-    const user = await this.userRepository.findOne({
-      where: { id },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  async findByAccountNumberOrThrow(accountNumber: string) {
+    const user = await this.userRepository.findOne({ where: { accountNumber } });
+    if (!user) throw new NotFoundException(`No user found with account number ${accountNumber}`);
+    return user;
+  }
+
+  async lookupByAccountNumber(accountNumber: string) {
+    const user = await this.findByAccountNumberOrThrow(accountNumber);
+    return {
+      name: user.name,
+      accountNumber: user.accountNumber,
+      bank: 'NeuraPay',
+      email: user.email,
+    };
   }
 
   async findByEmailWithPassword(email: string) {
@@ -74,11 +93,12 @@ export class UserService {
       .getOne();
   }
 
-  private toPublicUser(user: User) {
+  toPublicUser(user: User) {
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      accountNumber: user.accountNumber,
       status: user.status,
       createdAt: user.createdAt,
     };

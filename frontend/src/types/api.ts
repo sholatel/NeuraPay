@@ -4,6 +4,7 @@ export interface AuthUser {
   id: string
   name: string
   email: string
+  accountNumber: string | null
   status: UserStatus
 }
 
@@ -45,7 +46,7 @@ export interface DepositPayload {
 }
 
 export interface TransferPayload extends DepositPayload {
-  toUserId: string
+  toAccountNumber: string
 }
 
 export interface TransactionRecord {

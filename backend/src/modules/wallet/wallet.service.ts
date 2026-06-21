@@ -11,6 +11,7 @@ import { LedgerEntryType } from '../ledger/ledger-entry.entity';
 import { LedgerService } from '../ledger/ledger.service';
 import { NotificationService } from '../notification/notification.service';
 import { User } from '../user/user.entity';
+import { UserService } from '../user/user.service';
 import {
   TransactionStatus,
   TransactionType,
@@ -30,6 +31,7 @@ export class WalletService {
     private readonly walletRepository: Repository<Wallet>,
     private readonly ledgerService: LedgerService,
     private readonly notificationService: NotificationService,
+    private readonly userService: UserService,
   ) {}
 
   async findUserWalletOrThrow(
@@ -130,7 +132,9 @@ export class WalletService {
   }
 
   async transfer(userId: string, dto: TransferDto) {
-    if (dto.toUserId === userId) {
+    const recipient = await this.userService.findByAccountNumberOrThrow(dto.toAccountNumber);
+
+    if (recipient.id === userId) {
       throw new BadRequestException('Self-transfer is not allowed');
     }
 
@@ -139,7 +143,7 @@ export class WalletService {
 
       const senderWallet = await this.findUserWalletOrThrow(userId, dto.currency, manager);
       const receiverWallet = await this.findUserWalletOrThrow(
-        dto.toUserId,
+        recipient.id,
         dto.currency,
         manager,
       );
@@ -168,7 +172,7 @@ export class WalletService {
         status: TransactionStatus.SUCCESS,
         reference: dto.reference,
         fromUserId: userId,
-        toUserId: dto.toUserId,
+        toUserId: recipient.id,
         amount: dto.amount,
         currency: dto.currency,
       });

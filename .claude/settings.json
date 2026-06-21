@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(uv --version)",
+      "Bash(uv sync *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8000)",
+      "Bash(taskkill /PID 38904 /F)",
+      "Bash(taskkill /PID 33128 /F)",
+      "PowerShell(Stop-Process -Id 38904 -Force)",
+      "PowerShell(Stop-Process -Id 33128 -Force)"
     ]
   }
 }

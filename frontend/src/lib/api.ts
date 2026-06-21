@@ -32,6 +32,10 @@ async function request<T>(path: string, init?: RequestInit, token?: string): Pro
   })
 
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+    }
+
     const data = (await response.json().catch(() => null)) as
       | { message?: string | string[] }
       | null

@@ -11,6 +11,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  async getMe(userId: string) {
+    const user = await this.userService.findByIdOrThrow(userId);
+    return { valid: true, user: this.userService.toPublicUser(user) };
+  }
+
   async login(dto: LoginDto) {
     const user = await this.userService.findByEmailWithPassword(dto.email.toLowerCase());
 
@@ -36,6 +41,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        accountNumber: user.accountNumber,
         status: user.status,
       },
     };

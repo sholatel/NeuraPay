@@ -24,6 +24,7 @@ from app.core.exceptions import (
 )
 from app.agents.base import setup_agents
 from app.core.logging import get_logger, setup_logging
+from app.db.session import close_db, init_db
 from app.middleware.request_id import RequestIDMiddleware
 
 logger = get_logger(__name__)
@@ -38,6 +39,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Must run before the first request — Agent objects are lightweight and
     # created at import time, but Runner.run() picks up the global client here.
     setup_agents(settings)
+    await init_db()
 
     logger.info(
         "service.startup",
@@ -48,6 +50,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         port=settings.PORT,
     )
     yield
+    await close_db()
     logger.info("service.shutdown", name=settings.APP_NAME)
 
 

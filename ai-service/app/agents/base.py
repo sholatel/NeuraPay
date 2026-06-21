@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import base64
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from agents import set_tracing_disabled
 from agents.extensions.models.litellm_model import LitellmModel
@@ -18,6 +19,9 @@ from agents.extensions.models.litellm_model import LitellmModel
 from app.core.config import Settings, get_settings
 from app.core.logging import get_logger
 from app.integrations.banking.client import BankingClient
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 
@@ -34,14 +38,12 @@ class RequestContext:
     The OpenAI Agents SDK passes this object as `ctx.context` inside any
     tool decorated with @function_tool that declares RunContextWrapper[RequestContext]
     as its first parameter.
-
-    Why a dataclass and not a Pydantic model?
-    Pydantic models are for validated I/O. This is internal runtime state —
-    a dataclass is lighter and doesn't need serialisation.
     """
-    user_id: str                  # JWT `sub` claim — authenticated user
-    bearer_token: str             # raw JWT forwarded to banking backend
-    banking_client: BankingClient # pre-built HTTP client for this request
+    user_id: str                        # JWT `sub` claim — authenticated user
+    user: dict[str, Any]                # full user object from /api/auth/me
+    bearer_token: str                   # raw JWT forwarded to banking backend
+    banking_client: BankingClient       # pre-built HTTP client for this request
+    db_session: AsyncSession | None = field(default=None)  # per-request DB session
 
 
 # ── Prompt loading ────────────────────────────────────────────────────────────

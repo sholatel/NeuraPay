@@ -29,6 +29,15 @@ export class User {
   passwordHash: string;
 
   @Column({
+    name: 'account_number',
+    type: 'varchar',
+    length: 10,
+    unique: true,
+    nullable: true,
+  })
+  accountNumber: string | null;
+
+  @Column({
     type: 'enum',
     enum: UserStatus,
     default: UserStatus.ONBOARDING,

@@ -21,6 +21,7 @@
     "migration:run:prod": "npm run typeorm:prod -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:revert:prod": "npm run typeorm:prod -- migration:revert",
+    "seed:account-numbers": "ts-node -r tsconfig-paths/register src/db/seeds/backfill-account-numbers.seed.ts",
     "start:prod-with-migrations": "npm run migration:run:prod && npm run start:prod",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",

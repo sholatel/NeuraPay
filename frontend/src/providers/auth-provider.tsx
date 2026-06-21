@@ -32,6 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
   }, [session])
 
+  useEffect(() => {
+    function handleUnauthorized() {
+      setSession(null)
+    }
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [])
+
   async function login(email: string, password: string) {
     const response = await loginUser({ email, password })
 

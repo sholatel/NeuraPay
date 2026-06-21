@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     # ── CORS ─────────────────────────────────────────────────────────────────
     CORS_ALLOW_ORIGINS: str = "http://localhost:5173"
 
+    # ── Database ─────────────────────────────────────────────────────────────
+    # Must use asyncpg driver: postgresql+asyncpg://user:pass@host:port/dbname
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/wallet-ledger-db"
+
     # ── Banking Backend (NestJS) ─────────────────────────────────────────────
     BANKING_BACKEND_URL: str = "http://localhost:3000"
     BANKING_BACKEND_TIMEOUT_SECONDS: int = 30

@@ -2,25 +2,22 @@
 Transaction tools — callable by the Transactions_Agent.
 
 Fetches paginated ledger history for the authenticated user and formats
-it into a readable summary. Amounts from the API are in kobo; we convert
-to NGN for display.
+it into a readable summary. Amounts from the API are in NGN.
 """
 
 from agents import RunContextWrapper, function_tool
 
 from app.agents.base import RequestContext
 from app.core.exceptions import BankingBackendError
-from app.integrations.banking.client import kobo_to_ngn
 
 
 def _direction_icon(direction: str) -> str:
     return "↑" if direction == "incoming" else "↓"
 
 
-def _signed_amount(amount_kobo: int, direction: str) -> str:
-    ngn = kobo_to_ngn(abs(amount_kobo))
+def _signed_amount(amount_ngn: float, direction: str) -> str:
     prefix = "+" if direction == "incoming" else "-"
-    return f"{prefix}₦{ngn:,.2f}"
+    return f"{prefix}₦{abs(amount_ngn):,.2f}"
 
 
 def _shorten_id(uid: str | None) -> str:
@@ -72,7 +69,7 @@ async def get_transaction_history(
 
         for entry in entries:
             direction = entry.get("direction", "outgoing")
-            amount_kobo = entry.get("amount", 0)
+            amount_ngn = float(entry.get("amount", 0))
             tx_type = entry.get("type", "transfer").capitalize()
             status = entry.get("status", "success")
             reference = entry.get("reference", "")
@@ -80,7 +77,7 @@ async def get_transaction_history(
             date = entry.get("createdAt", "")[:10]
 
             icon = _direction_icon(direction)
-            amount_str = _signed_amount(amount_kobo, direction)
+            amount_str = _signed_amount(amount_ngn, direction)
             cp_str = f" | {counterparty}" if counterparty != "—" else ""
 
             lines.append(
